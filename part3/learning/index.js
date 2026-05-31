@@ -3,10 +3,6 @@ const cors = require('cors')
 
 const app = express()
 
-app.use(cors())
-app.use(express.json())
-app.use(express.static('dist'))
-
 
 let notes = [
   {
@@ -25,6 +21,19 @@ let notes = [
     important: true
   }
 ]
+
+const requestLogger = (request, response, next) => {
+  console.log('Method:', request.method)
+  console.log('Path:  ', request.path)
+  console.log('Body:  ', request.body)
+  console.log('---')
+  next()
+}
+
+app.use(cors())
+app.use(requestLogger)
+app.use(express.json())
+app.use(express.static('dist'))
 
 app.get('/', (request, response) => {
   response.send('<h1>Hello World!</h1>')
@@ -77,26 +86,6 @@ app.delete('/api/notes/:id', (request, response) => {
   notes = notes.filter(note => note.id !== id)
 
   response.status(204).end()
-})
-
-app.put('/api/notes/:id', (request, response) => {
-  const id = request.params.id
-  const updatedNote = request.body
-
-  const note = notes.find(n => n.id === id)
-
-  if (!note) {
-    return response.status(404).end()
-  }
-
-  const newNote = {
-    ...note,
-    important: updatedNote.important
-  }
-
-  notes = notes.map(n => n.id === id ? newNote : n)
-
-  response.json(newNote)
 })
 
 const unknownEndpoint = (request, response) => {
